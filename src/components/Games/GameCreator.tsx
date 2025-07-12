@@ -83,30 +83,28 @@ export const GameCreator: React.FC<GameCreatorProps> = ({ lottery, onGameCreated
           </div>
         </div>
 
-        {lottery === 'federal' ? (
-          <div className="grid grid-cols-8 sm:grid-cols-10 gap-2">
-            {Array.from({ length: config.range }, (_, i) => i + 1).map(number => (
-              <button
-                key={number}
-                onClick={() => toggleNumber(number)}
-                disabled={!selectedNumbers.includes(number) && selectedNumbers.length >= maxSelectable}
-                className={`
-                  h-10 w-10 rounded-lg text-sm font-medium transition-all
-                  ${selectedNumbers.includes(number)
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }
-                  ${!selectedNumbers.includes(number) && selectedNumbers.length >= maxSelectable
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'cursor-pointer'
-                  }
-                `}
-              >
-                {number}
-              </button>
-            ))}
-          </div>
-        ) : null}
+        <div className="grid grid-cols-8 sm:grid-cols-10 gap-2">
+          {Array.from({ length: config.range }, (_, i) => i + 1).map(number => (
+            <button
+              key={number}
+              onClick={() => toggleNumber(number)}
+              disabled={!selectedNumbers.includes(number) && selectedNumbers.length >= maxSelectable}
+              className={`
+                h-10 w-10 rounded-lg text-sm font-medium transition-all
+                ${selectedNumbers.includes(number)
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }
+                ${!selectedNumbers.includes(number) && selectedNumbers.length >= maxSelectable
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'cursor-pointer'
+                }
+              `}
+            >
+              {number}
+            </button>
+          ))}
+        </div>
       </div>
 
       {selectedNumbers.length > 0 && (

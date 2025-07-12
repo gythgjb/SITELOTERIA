@@ -15,18 +15,27 @@ export const Header: React.FC = () => {
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
-            <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+            <a 
+              href="#" 
+              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+            >
               <FileSpreadsheet className="h-4 w-4" />
               <span>Planilhas</span>
-            </button>
-            <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+            </a>
+            <a 
+              href="#" 
+              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+            >
               <Package className="h-4 w-4" />
               <span>Mais Produtos</span>
-            </button>
-            <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+            </a>
+            <a 
+              href="#" 
+              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+            >
               <Users className="h-4 w-4" />
               <span>Comunidade</span>
-            </button>
+            </a>
           </nav>
           
           <div className="flex items-center space-x-4">
