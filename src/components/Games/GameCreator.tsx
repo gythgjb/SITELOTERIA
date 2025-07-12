@@ -106,6 +106,7 @@ export const GameCreator: React.FC<GameCreatorProps> = ({ lottery, onGameCreated
               </button>
             ))}
           </div>
+        ) : null}
       </div>
 
       {selectedNumbers.length > 0 && (
