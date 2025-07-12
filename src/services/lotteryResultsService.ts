@@ -171,7 +171,7 @@ class LotteryResultsService {
       data: data.dataApuracao || data.data || new Date().toISOString().split('T')[0],
       numeros,
       acumulou: data.acumulou || false,
-      valorPremio: data.valorEstimadoProximoConcurso || data.valorPremio || 'Não informado',
+      valorPremio: String(data.valorEstimadoProximoConcurso || data.valorPremio || 'Não informado'),
       proximoConcurso: data.numeroConcursoProximo || data.proximoConcurso,
       dataProximoConcurso: data.dataProximoConcurso
     };
