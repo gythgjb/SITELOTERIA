@@ -3,10 +3,12 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthForm } from './components/Auth/AuthForm';
 import { Header } from './components/Dashboard/Header';
 import { Dashboard } from './components/Dashboard/Dashboard';
+import { WinningGames } from './components/WinningGames/WinningGames';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'winning-games'>('dashboard');
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -16,6 +18,37 @@ const AppContent: React.FC = () => {
     }
   }, [user, isLoading]);
 
+  // Simular navegação simples
+  useEffect(() => {
+    const handleNavigation = () => {
+      const path = window.location.pathname;
+      if (path.includes('winning-games')) {
+        setCurrentView('winning-games');
+      } else {
+        setCurrentView('dashboard');
+      }
+    };
+
+    handleNavigation();
+    window.addEventListener('popstate', handleNavigation);
+    
+    // Interceptar cliques nos links
+    const handleLinkClick = (e: Event) => {
+      const target = e.target as HTMLAnchorElement;
+      if (target.href && target.href.includes('winning-games')) {
+        e.preventDefault();
+        window.history.pushState({}, '', '/winning-games');
+        setCurrentView('winning-games');
+      }
+    };
+
+    document.addEventListener('click', handleLinkClick);
+
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+      document.removeEventListener('click', handleLinkClick);
+    };
+  }, []);
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -35,7 +68,7 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main>
-        <Dashboard />
+        {currentView === 'dashboard' ? <Dashboard /> : <WinningGames />}
       </main>
     </div>
   );

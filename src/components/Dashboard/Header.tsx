@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, User, FileSpreadsheet, Package, Users } from 'lucide-react';
+import { LogOut, User, FileSpreadsheet, Package, Users, Trophy } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const Header: React.FC = () => {
@@ -15,6 +15,13 @@ export const Header: React.FC = () => {
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
+            <a 
+              href="/winning-games" 
+              className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors"
+            >
+              <Trophy className="h-4 w-4" />
+              <span>Jogos Vencedores</span>
+            </a>
             <a 
               href="#" 
               className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
