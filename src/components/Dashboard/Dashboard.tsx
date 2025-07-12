@@ -4,6 +4,7 @@ import { LOTTERY_CONFIGS } from '../../config/lotteries';
 import { gameService } from '../../services/gameService';
 import { useAuth } from '../../contexts/AuthContext';
 import { LotteryCard } from './LotteryCard';
+import { LotteryResults } from './LotteryResults';
 import { GameManager } from '../Games/GameManager';
 
 export const Dashboard: React.FC = () => {
@@ -34,6 +35,11 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Últimos Resultados */}
+      <div className="mb-8">
+        <LotteryResults />
+      </div>
+
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Suas Loterias</h2>
         <p className="text-gray-600">Selecione uma modalidade para gerenciar seus jogos</p>
