@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotemax - Jogue com Responsabilidade</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, createContext, useContext, useMemo } = React;
+        const { 
+            Mail, Lock, User, Eye, EyeOff, Heart, Trash2, Copy, Download, 
+            MoreVertical, Shuffle, Save, X, ArrowLeft, Plus, BarChart3, 
+            TrendingUp, TrendingDown, PieChart, LogOut, FileSpreadsheet, 
+            Package, Users, Trophy, RefreshCw, Calendar, Star, Award, Target
+        } = lucideReact;
+
+        // Configurações das loterias
+        const LOTTERY_CONFIGS = {
+            megasena: {
+                name: 'Mega-Sena',
+                minNumbers: 6,
+                maxNumbers: 15,
+                range: 60,
+                icon: '💰'
+            },
+            quina: {
+                name: 'Quina',
+                minNumbers: 5,
+                maxNumbers: 15,
+                range: 80,
+                icon: '🎯'
+            },
+            lotofacil: {
+                name: 'Lotofácil',
+                minNumbers: 15,
+                maxNumbers: 15,
+                range: 25,
+                icon: '🍀'
+            },
+            lotomania: {
+                name: 'Lotomania',
+                minNumbers: 50,
+                maxNumbers: 50,
+                range: 100,
+                icon: '🎰'
+            },
+            timemania: {
+                name: 'Timemania',
+                minNumbers: 10,
+                maxNumbers: 10,
+                range: 80,
+                icon: '⚽'
+            },
+            duplasena: {
+                name: 'Dupla Sena',
+                minNumbers: 6,
+                maxNumbers: 15,
+                range: 50,
+                icon: '🎲'
+            },
+            milionaria: {
+                name: '+Milionária',
+                minNumbers: 6,
+                maxNumbers: 12,
+                range: 50,
+                icon: '💎'
+            }
+        };
+
+        // Dados mock para resultados
+        const MOCK_RESULTS = {
+            megasena: {
+                modalidade: 'megasena',
+                concurso: 2650,
+                data: '2024-01-15',
+                numeros: [12, 18, 25, 31, 42, 58],
+                acumulou: false,
+                valorPremio: 'R$ 52.000.000,00',
+                proximoConcurso: 2651,
+                dataProximoConcurso: '2024-01-17'
+            },
+            quina: {
+                modalidade: 'quina',
+                concurso: 6350,
+                data: '2024-01-15',
+                numeros: [8, 23, 34, 67, 78],
+                acumulou: true,
+                valorPremio: 'R$ 8.500.000,00',
+                proximoConcurso: 6351,
+                dataProximoConcurso: '2024-01-16'
+            },
+            lotofacil: {
+                modalidade: 'lotofacil',
+                concurso: 2950,
+                data: '2024-01-15',
+                numeros: [2, 4, 6, 8, 9, 11, 13, 15, 16, 18, 19, 21, 22, 24, 25],
+                acumulou: false,
+                valorPremio: 'R$ 1.500.000,00',
+                proximoConcurso: 2951,
+                dataProximoConcurso: '2024-01-16'
+            },
+            lotomania: {
+                modalidade: 'lotomania',
+                concurso: 2550,
+                data: '2024-01-12',
+                numeros: [5, 12, 18, 23, 27, 31, 36, 42, 48, 53, 59, 64, 71, 76, 82, 87, 91, 95, 98, 99],
+                acumulou: true,
+                valorPremio: 'R$ 3.200.000,00',
+                proximoConcurso: 2551,
+                dataProximoConcurso: '2024-01-16'
+            },
+            timemania: {
+                modalidade: 'timemania',
+                concurso: 2050,
+                data: '2024-01-13',
+                numeros: [7, 15, 23, 31, 42, 56, 67, 71, 78, 80],
+                acumulou: false,
+                valorPremio: 'R$ 850.000,00',
+                proximoConcurso: 2051,
+                dataProximoConcurso: '2024-01-16'
+            },
+            duplasena: {
+                modalidade: 'duplasena',
+                concurso: 2450,
+                data: '2024-01-13',
+                numeros: [8, 15, 22, 31, 38, 47],
+                acumulou: true,
+                valorPremio: 'R$ 2.100.000,00',
+                proximoConcurso: 2451,
+                dataProximoConcurso: '2024-01-16'
+            },
+            milionaria: {
+                modalidade: 'milionaria',
+                concurso: 150,
+                data: '2024-01-13',
+                numeros: [3, 12, 18, 25, 31, 42],
+                acumulou: true,
+                valorPremio: 'R$ 45.000.000,00',
+                proximoConcurso: 151,
+                dataProximoConcurso: '2024-01-17'
+            }
+        };
+
+        // Serviços
+        const authService = {
+            login: async (email, password) => {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const users = JSON.parse(localStorage.getItem('lotemax_users') || '[]');
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    const { password: _, ...userWithoutPassword } = user;
+                    localStorage.setItem('lotemax_current_user', JSON.stringify(userWithoutPassword));
+                    return userWithoutPassword;
+                }
+                return null;
+            },
+
+            register: async (email, password, name) => {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const users = JSON.parse(localStorage.getItem('lotemax_users') || '[]');
+                
+                if (users.find(u => u.email === email)) {
+                    throw new Error('Email já cadastrado');
+                }
+                
+                const newUser = {
+                    id: Date.now().toString(),
+                    email,
+                    password,
+                    name,
+                    createdAt: new Date().toISOString()
+                };
+                
+                users.push(newUser);
+                localStorage.setItem('lotemax_users', JSON.stringify(users));
+                
+                const { password: _, ...userWithoutPassword } = newUser;
+                localStorage.setItem('lotemax_current_user', JSON.stringify(userWithoutPassword));
+                
+                return userWithoutPassword;
+            },
+
+            getCurrentUser: () => {
+                const userStr = localStorage.getItem('lotemax_current_user');
+                return userStr ? JSON.parse(userStr) : null;
+            },
+
+            logout: () => {
+                localStorage.removeItem('lotemax_current_user');
+            }
+        };
+
+        const gameService = {
+            getUserGames: (userId) => {
+                const games = JSON.parse(localStorage.getItem('lotemax_games') || '[]');
+                return games.filter(game => game.userId === userId);
+            },
+
+            saveGame: (game) => {
+                const games = JSON.parse(localStorage.getItem('lotemax_games') || '[]');
+                const newGame = {
+                    ...game,
+                    id: Date.now().toString(),
+                    createdAt: new Date().toISOString()
+                };
+                
+                games.push(newGame);
+                localStorage.setItem('lotemax_games', JSON.stringify(games));
+                
+                return newGame;
+            },
+
+            updateGame: (gameId, updates) => {
+                const games = JSON.parse(localStorage.getItem('lotemax_games') || '[]');
+                const index = games.findIndex(game => game.id === gameId);
+                
+                if (index !== -1) {
+                    games[index] = { ...games[index], ...updates };
+                    localStorage.setItem('lotemax_games', JSON.stringify(games));
+                }
+            },
+
+            deleteGame: (gameId) => {
+                const games = JSON.parse(localStorage.getItem('lotemax_games') || '[]');
+                const filteredGames = games.filter(game => game.id !== gameId);
+                localStorage.setItem('lotemax_games', JSON.stringify(filteredGames));
+            },
+
+            generateRandomNumbers: (modalidade, count) => {
+                const config = LOTTERY_CONFIGS[modalidade];
+                const numbers = [];
+                
+                while (numbers.length < count) {
+                    const num = Math.floor(Math.random() * config.range) + 1;
+                    if (!numbers.includes(num)) {
+                        numbers.push(num);
+                    }
+                }
+                
+                return numbers.sort((a, b) => a - b);
+            },
+
+            getGameStatistics: (userId, modalidade) => {
+                const games = gameService.getUserGames(userId).filter(game => game.modalidade === modalidade);
+                const config = LOTTERY_CONFIGS[modalidade];
+                
+                const frequency = {};
+                let evenCount = 0;
+                let oddCount = 0;
+                
+                games.forEach(game => {
+                    game.numbers.forEach(num => {
+                        frequency[num] = (frequency[num] || 0) + 1;
+                        if (num % 2 === 0) evenCount++;
+                        else oddCount++;
+                    });
+                });
+                
+                const allNumbers = Array.from({ length: config.range }, (_, i) => i + 1);
+                const drawnNumbers = Object.keys(frequency).map(Number);
+                const neverDrawn = allNumbers.filter(num => !drawnNumbers.includes(num));
+                
+                const favoriteNumbers = Object.entries(frequency)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 10)
+                    .map(([num]) => Number(num));
+                
+                return {
+                    totalGames: games.length,
+                    favoriteNumbers,
+                    neverDrawn: neverDrawn.slice(0, 20),
+                    evenCount,
+                    oddCount,
+                    frequency
+                };
+            }
+        };
+
+        const lotteryResultsService = {
+            cache: new Map(),
+            CACHE_DURATION: 30 * 60 * 1000,
+
+            async getLatestResult(modalidade) {
+                const cached = this.cache.get(modalidade);
+                if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+                    return cached.result;
+                }
+
+                try {
+                    const result = await this.fetchFromAPI(modalidade);
+                    this.cache.set(modalidade, {
+                        result,
+                        timestamp: Date.now()
+                    });
+                    return result;
+                } catch (error) {
+                    console.warn(`Erro ao buscar resultado de ${modalidade}:`, error);
+                    return MOCK_RESULTS[modalidade];
+                }
+            },
+
+            async getAllLatestResults() {
+                const modalidades = Object.keys(LOTTERY_CONFIGS);
+                const promises = modalidades.map(modalidade => this.getLatestResult(modalidade));
+                
+                try {
+                    return await Promise.all(promises);
+                } catch (error) {
+                    console.warn('Erro ao buscar todos os resultados:', error);
+                    return Object.values(MOCK_RESULTS);
+                }
+            },
+
+            async fetchFromAPI(modalidade) {
+                // Simula busca da API - retorna dados mock
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return MOCK_RESULTS[modalidade];
+            }
+        };
+
+        const winningService = {
+            PRIZE_CATEGORIES: {
+                megasena: {
+                    6: { name: 'Sena', prize: 'Prêmio Principal' },
+                    5: { name: 'Quina', prize: 'R$ 50.000,00' },
+                    4: { name: 'Quadra', prize: 'R$ 1.000,00' }
+                },
+                quina: {
+                    5: { name: 'Quina', prize: 'Prêmio Principal' },
+                    4: { name: 'Quadra', prize: 'R$ 8.000,00' },
+                    3: { name: 'Terno', prize: 'R$ 120,00' },
+                    2: { name: 'Duque', prize: 'R$ 3,50' }
+                },
+                lotofacil: {
+                    15: { name: '15 acertos', prize: 'Prêmio Principal' },
+                    14: { name: '14 acertos', prize: 'R$ 1.500,00' },
+                    13: { name: '13 acertos', prize: 'R$ 25,00' },
+                    12: { name: '12 acertos', prize: 'R$ 10,00' },
+                    11: { name: '11 acertos', prize: 'R$ 5,00' }
+                },
+                lotomania: {
+                    20: { name: '20 acertos', prize: 'Prêmio Principal' },
+                    19: { name: '19 acertos', prize: 'R$ 15.000,00' },
+                    18: { name: '18 acertos', prize: 'R$ 300,00' },
+                    17: { name: '17 acertos', prize: 'R$ 20,00' },
+                    16: { name: '16 acertos', prize: 'R$ 8,00' },
+                    0: { name: '0 acertos', prize: 'R$ 8,00' }
+                },
+                timemania: {
+                    7: { name: '7 acertos', prize: 'Prêmio Principal' },
+                    6: { name: '6 acertos', prize: 'R$ 8.000,00' },
+                    5: { name: '5 acertos', prize: 'R$ 300,00' },
+                    4: { name: '4 acertos', prize: 'R$ 10,50' },
+                    3: { name: '3 acertos', prize: 'R$ 3,50' }
+                },
+                duplasena: {
+                    6: { name: 'Sena', prize: 'Prêmio Principal' },
+                    5: { name: 'Quina', prize: 'R$ 15.000,00' },
+                    4: { name: 'Quadra', prize: 'R$ 500,00' },
+                    3: { name: 'Terno', prize: 'R$ 5,00' }
+                },
+                milionaria: {
+                    6: { name: '6 + 2 trevos', prize: 'Prêmio Principal' },
+                    5: { name: '5 + 2 trevos', prize: 'R$ 50.000,00' },
+                    4: { name: '4 + 2 trevos', prize: 'R$ 1.000,00' },
+                    3: { name: '3 + 2 trevos', prize: 'R$ 50,00' },
+                    2: { name: '2 + 2 trevos', prize: 'R$ 6,00' }
+                }
+            },
+
+            async checkWinningGames(games) {
+                const results = await lotteryResultsService.getAllLatestResults();
+                const winningMatches = [];
+
+                for (const game of games) {
+                    const result = results.find(r => r.modalidade === game.modalidade);
+                    if (!result) continue;
+
+                    const match = this.checkGameMatch(game, result);
+                    if (match) {
+                        winningMatches.push(match);
+                    }
+                }
+
+                return winningMatches.sort((a, b) => b.matchCount - a.matchCount);
+            },
+
+            checkGameMatch(game, result) {
+                const matchedNumbers = game.numbers.filter(num => result.numeros.includes(num));
+                const matchCount = matchedNumbers.length;
+                
+                const prizeInfo = this.getPrizeInfo(game.modalidade, matchCount);
+                const isWinner = prizeInfo !== null;
+
+                return {
+                    game,
+                    result,
+                    matchedNumbers,
+                    matchCount,
+                    prizeCategory: prizeInfo?.name || `${matchCount} acertos`,
+                    estimatedPrize: prizeInfo?.prize || 'Sem premiação',
+                    isWinner
+                };
+            },
+
+            getPrizeInfo(modalidade, matchCount) {
+                const categories = this.PRIZE_CATEGORIES[modalidade];
+                if (!categories) return null;
+                return categories[matchCount] || null;
+            },
+
+            async getWinningStats(games) {
+                const matches = await this.checkWinningGames(games);
+                const winners = matches.filter(m => m.isWinner);
+                const bestMatch = matches.length > 0 ? matches[0] : null;
+                
+                return {
+                    totalGames: games.length,
+                    totalWinners: winners.length,
+                    totalPrizeValue: 0,
+                    winningPercentage: games.length > 0 ? (winners.length / games.length) * 100 : 0,
+                    bestMatch
+                };
+            }
+        };
+
+        // Context de Autenticação
+        const AuthContext = createContext();
+
+        const useAuth = () => {
+            const context = useContext(AuthContext);
+            if (!context) {
+                throw new Error('useAuth must be used within an AuthProvider');
+            }
+            return context;
+        };
+
+        const AuthProvider = ({ children }) => {
+            const [user, setUser] = useState(null);
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                const currentUser = authService.getCurrentUser();
+                setUser(currentUser);
+                setIsLoading(false);
+            }, []);
+
+            const login = async (email, password) => {
+                setIsLoading(true);
+                try {
+                    const user = await authService.login(email, password);
+                    setUser(user);
+                    return !!user;
+                } catch (error) {
+                    return false;
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const register = async (email, password, name) => {
+                setIsLoading(true);
+                try {
+                    const user = await authService.register(email, password, name);
+                    setUser(user);
+                    return !!user;
+                } catch (error) {
+                    return false;
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const logout = () => {
+                authService.logout();
+                setUser(null);
+            };
+
+            return (
+                <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+                    {children}
+                </AuthContext.Provider>
+            );
+        };
+
+        // Componentes
+        const AuthForm = ({ onSuccess }) => {
+            const [isLogin, setIsLogin] = useState(true);
+            const [showPassword, setShowPassword] = useState(false);
+            const [formData, setFormData] = useState({
+                email: '',
+                password: '',
+                name: ''
+            });
+            const [error, setError] = useState('');
+            
+            const { login, register, isLoading } = useAuth();
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+
+                try {
+                    let success = false;
+                    if (isLogin) {
+                        success = await login(formData.email, formData.password);
+                        if (!success) setError('Email ou senha incorretos');
+                    } else {
+                        success = await register(formData.email, formData.password, formData.name);
+                        if (!success) setError('Erro ao criar conta');
+                    }
+
+                    if (success) {
+                        onSuccess();
+                    }
+                } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Erro inesperado');
+                }
+            };
+
+            const handleInputChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value
+                });
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                        <div className="text-center mb-8">
+                            <div className="text-4xl mb-2">🎲</div>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Lotemax</h1>
+                            <p className="text-gray-600">Sua sorte, no controle.</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {!isLogin && (
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        placeholder="Nome completo"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    required
+                                />
+                            </div>
+
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    name="password"
+                                    placeholder="Senha"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                            </div>
+
+                            {error && (
+                                <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg">
+                                    {error}
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar Conta')}
+                            </button>
+                        </form>
+
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={() => setIsLogin(!isLogin)}
+                                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                            >
+                                {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Header = () => {
+            const { user, logout } = useAuth();
+
+            return (
+                <header className="bg-white shadow-sm border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center space-x-3">
+                                <div className="text-2xl">🎲</div>
+                                <h1 className="text-xl font-bold text-gray-900">Lotemax</h1>
+                            </div>
+                            
+                            <nav className="hidden md:flex items-center space-x-6">
+                                <a 
+                                    href="#winning-games" 
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors"
+                                >
+                                    <Trophy className="h-4 w-4" />
+                                    <span>Jogos Vencedores</span>
+                                </a>
+                                <a 
+                                    href="#planilhas" 
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+                                >
+                                    <FileSpreadsheet className="h-4 w-4" />
+                                    <span>Planilhas</span>
+                                </a>
+                                <a 
+                                    href="#produtos" 
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+                                >
+                                    <Package className="h-4 w-4" />
+                                    <span>Mais Produtos</span>
+                                </a>
+                                <a 
+                                    href="#comunidade" 
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+                                >
+                                    <Users className="h-4 w-4" />
+                                    <span>Comunidade</span>
+                                </a>
+                            </nav>
+                            
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-2 text-gray-700">
+                                    <User className="h-5 w-5" />
+                                    <span className="hidden sm:block">{user?.name}</span>
+                                </div>
+                                
+                                <button
+                                    onClick={logout}
+                                    className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                                >
+                                    <LogOut className="h-5 w-5" />
+                                    <span className="hidden sm:block">Sair</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const LotteryResults = () => {
+            const [results, setResults] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [lastUpdate, setLastUpdate] = useState(null);
+
+            const fetchResults = async () => {
+                setLoading(true);
+                try {
+                    const latestResults = await lotteryResultsService.getAllLatestResults();
+                    setResults(latestResults);
+                    setLastUpdate(new Date());
+                } catch (error) {
+                    console.error('Erro ao buscar resultados:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                fetchResults();
+            }, []);
+
+            const formatDate = (dateString) => {
+                return new Date(dateString).toLocaleDateString('pt-BR');
+            };
+
+            const formatPrize = (prize) => {
+                const prizeStr = String(prize);
+                if (prizeStr.includes('R$')) return prizeStr;
+                return `R$ ${prizeStr}`;
+            };
+
+            if (loading) {
+                return (
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-center py-12">
+                            <div className="text-center">
+                                <RefreshCw className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-4" />
+                                <p className="text-gray-600">Carregando últimos resultados...</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center space-x-3">
+                            <Trophy className="h-6 w-6 text-yellow-600" />
+                            <h3 className="text-xl font-semibold text-gray-900">Últimos Resultados</h3>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                            {lastUpdate && (
+                                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Atualizado: {lastUpdate.toLocaleTimeString('pt-BR')}</span>
+                                </div>
+                            )}
+                            
+                            <button
+                                onClick={fetchResults}
+                                disabled={loading}
+                                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                <span>Atualizar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {results.map((result) => {
+                            const config = LOTTERY_CONFIGS[result.modalidade];
+                            
+                            return (
+                                <div
+                                    key={result.modalidade}
+                                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-2xl">{config.icon}</span>
+                                            <div>
+                                                <h4 className="font-semibold text-gray-900">{config.name}</h4>
+                                                <p className="text-xs text-gray-500">Concurso {result.concurso}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="text-right">
+                                            <div className="text-xs text-gray-500">{formatDate(result.data)}</div>
+                                            {result.acumulou && (
+                                                <div className="flex items-center space-x-1 text-orange-600">
+                                                    <TrendingUp className="h-3 w-3" />
+                                                    <span className="text-xs font-medium">Acumulou</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="flex flex-wrap gap-1">
+                                            {result.numeros.slice(0, 10).map((numero, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
+                                                >
+                                                    {numero}
+                                                </span>
+                                            ))}
+                                            {result.numeros.length > 10 && (
+                                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                                    +{result.numeros.length - 10}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {result.valorPremio && (
+                                        <div className="text-xs text-gray-600">
+                                            <span className="font-medium">Prêmio:</span> {formatPrize(result.valorPremio)}
+                                        </div>
+                                    )}
+
+                                    {result.proximoConcurso && result.dataProximoConcurso && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            Próximo: {result.proximoConcurso} - {formatDate(result.dataProximoConcurso)}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="mt-4 text-xs text-gray-500 text-center">
+                        Resultados obtidos automaticamente. Em caso de divergência, consulte o site oficial da Caixa.
+                    </div>
+                </div>
+            );
+        };
+
+        const LotteryCard = ({ type, gameCount, onClick }) => {
+            const config = LOTTERY_CONFIGS[type];
+
+            return (
+                <div
+                    onClick={onClick}
+                    className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-200 hover:border-blue-300 group"
+                >
+                    <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-3xl group-hover:scale-110 transition-transform">
+                                {config.icon}
+                            </div>
+                            <div className="text-right">
+                                <div className="text-2xl font-bold text-blue-600">{gameCount}</div>
+                                <div className="text-xs text-gray-500">jogos</div>
+                            </div>
+                        </div>
+                        
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{config.name}</h3>
+                        
+                        <div className="text-sm text-gray-600 space-y-1">
+                            <div>Números: {config.minNumbers === config.maxNumbers ? config.minNumbers : `${config.minNumbers}-${config.maxNumbers}`}</div>
+                            <div>Faixa: 1-{config.range}</div>
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <span className="text-blue-600 text-sm font-medium group-hover:text-blue-700">
+                                Gerenciar jogos →
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const GameCreator = ({ lottery, onGameCreated, onCancel }) => {
+            const { user } = useAuth();
+            const config = LOTTERY_CONFIGS[lottery];
+            const [selectedNumbers, setSelectedNumbers] = useState([]);
+            const [isManual, setIsManual] = useState(true);
+
+            const maxSelectable = lottery === 'lotofacil' ? 15 : config.maxNumbers;
+            const minSelectable = lottery === 'lotofacil' ? 15 : config.minNumbers;
+
+            const toggleNumber = (number) => {
+                if (selectedNumbers.includes(number)) {
+                    setSelectedNumbers(prev => prev.filter(n => n !== number));
+                } else if (selectedNumbers.length < maxSelectable) {
+                    setSelectedNumbers(prev => [...prev, number].sort((a, b) => a - b));
+                }
+            };
+
+            const generateRandomGame = () => {
+                const count = lottery === 'lotofacil' ? 15 : config.minNumbers;
+                const numbers = gameService.generateRandomNumbers(lottery, count);
+                setSelectedNumbers(numbers);
+                setIsManual(false);
+            };
+
+            const saveGame = () => {
+                if (!user || selectedNumbers.length < minSelectable) return;
+
+                const game = gameService.saveGame({
+                    userId: user.id,
+                    modalidade: lottery,
+                    numbers: selectedNumbers,
+                    isFavorite: false,
+                    isManual
+                });
+
+                onGameCreated(game);
+            };
+
+            const canSave = selectedNumbers.length >= minSelectable && 
+                            (lottery !== 'lotofacil' || selectedNumbers.length === 15);
+
+            return (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900">Criar Novo Jogo</h3>
+                        <div className="flex items-center space-x-3">
+                            <button
+                                onClick={generateRandomGame}
+                                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                                <Shuffle className="h-4 w-4" />
+                                <span>Gerar Aleatório</span>
+                            </button>
+                            <button
+                                onClick={onCancel}
+                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-sm text-gray-600">
+                                Selecione {lottery === 'lotofacil' ? '15 números' : `${minSelectable}-${maxSelectable} números`}
+                            </div>
+                            <div className="text-sm font-medium text-blue-600">
+                                {selectedNumbers.length} selecionados
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-8 sm:grid-cols-10 gap-2">
+                            {Array.from({ length: config.range }, (_, i) => i + 1).map(number => (
+                                <button
+                                    key={number}
+                                    onClick={() => toggleNumber(number)}
+                                    disabled={!selectedNumbers.includes(number) && selectedNumbers.length >= maxSelectable}
+                                    className={`
+                                        h-10 w-10 rounded-lg text-sm font-medium transition-all
+                                        ${selectedNumbers.includes(number)
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }
+                                        ${!selectedNumbers.includes(number) && selectedNumbers.length >= maxSelectable
+                                            ? 'opacity-50 cursor-not-allowed'
+                                            : 'cursor-pointer'
+                                        }
+                                    `}
+                                >
+                                    {number}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {selectedNumbers.length > 0 && (
+                        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                            <div className="text-sm font-medium text-blue-900 mb-2">Números selecionados:</div>
+                            <div className="flex flex-wrap gap-2">
+                                {selectedNumbers.map(number => (
+                                    <span
+                                        key={number}
+                                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full"
+                                    >
+                                        {number}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end space-x-3">
+                        <button
+                            onClick={onCancel}
+                            className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={saveGame}
+                            disabled={!canSave}
+                            className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Save className="h-4 w-4" />
+                            <span>Salvar Jogo</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const GameList = ({ games, onGameUpdated, onGameDeleted }) => {
+            const [activeMenu, setActiveMenu] = useState(null);
+
+            const toggleFavorite = (game) => {
+                gameService.updateGame(game.id, { isFavorite: !game.isFavorite });
+                onGameUpdated();
+            };
+
+            const deleteGame = (gameId) => {
+                if (confirm('Tem certeza que deseja excluir este jogo?')) {
+                    gameService.deleteGame(gameId);
+                    onGameDeleted(gameId);
+                }
+            };
+
+            const copyNumbers = (numbers) => {
+                navigator.clipboard.writeText(numbers.join(', '));
+                alert('Números copiados para a área de transferência!');
+            };
+
+            const exportGame = (game) => {
+                const text = `${game.modalidade.toUpperCase()}\nNúmeros: ${game.numbers.join(', ')}\nCriado em: ${new Date(game.createdAt).toLocaleDateString()}`;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `lotemax-${game.modalidade}-${game.id}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            if (games.length === 0) {
+                return (
+                    <div className="text-center py-12">
+                        <div className="text-4xl mb-4">🎲</div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum jogo salvo</h3>
+                        <p className="text-gray-600">Crie seu primeiro jogo clicando no botão "Novo Jogo"</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="space-y-4">
+                    {games.map((game) => (
+                        <div
+                            key={game.id}
+                            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="text-sm text-gray-500">
+                                        {new Date(game.createdAt).toLocaleDateString()}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        {game.isManual ? (
+                                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                                Manual
+                                            </span>
+                                        ) : (
+                                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                                Automático
+                                            </span>
+                                        )}
+                                        {game.isFavorite && (
+                                            <Heart className="h-4 w-4 text-red-500 fill-current" />
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setActiveMenu(activeMenu === game.id ? null : game.id)}
+                                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        <MoreVertical className="h-4 w-4" />
+                                    </button>
+
+                                    {activeMenu === game.id && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                            <button
+                                                onClick={() => {
+                                                    toggleFavorite(game);
+                                                    setActiveMenu(null);
+                                                }}
+                                                className="w-full flex items-center space-x-2 px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Heart className={`h-4 w-4 ${game.isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'}`} />
+                                                <span>{game.isFavorite ? 'Remover favorito' : 'Favoritar'}</span>
+                                            </button>
+                                            
+                                            <button
+                                                onClick={() => {
+                                                    copyNumbers(game.numbers);
+                                                    setActiveMenu(null);
+                                                }}
+                                                className="w-full flex items-center space-x-2 px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Copy className="h-4 w-4 text-gray-400" />
+                                                <span>Copiar números</span>
+                                            </button>
+                                            
+                                            <button
+                                                onClick={() => {
+                                                    exportGame(game);
+                                                    setActiveMenu(null);
+                                                }}
+                                                className="w-full flex items-center space-x-2 px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Download className="h-4 w-4 text-gray-400" />
+                                                <span>Exportar</span>
+                                            </button>
+                                            
+                                            <button
+                                                onClick={() => {
+                                                    deleteGame(game.id);
+                                                    setActiveMenu(null);
+                                                }}
+                                                className="w-full flex items-center space-x-2 px-4 py-2 text-left hover:bg-red-50 text-red-600 transition-colors"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span>Excluir</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                                {game.numbers.map((number, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"
+                                    >
+                                        {number}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const GameStatistics = ({ lottery, userId }) => {
+            const stats = gameService.getGameStatistics(userId, lottery);
+
+            if (stats.totalGames === 0) {
+                return (
+                    <div className="text-center py-12">
+                        <div className="text-4xl mb-4">📊</div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Sem estatísticas</h3>
+                        <p className="text-gray-600">Crie alguns jogos para ver as estatísticas</p>
+                    </div>
+                );
+            }
+
+            const evenPercentage = Math.round((stats.evenCount / (stats.evenCount + stats.oddCount)) * 100);
+            const oddPercentage = 100 - evenPercentage;
+
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <BarChart3 className="h-5 w-5 text-blue-600" />
+                                <span className="text-sm font-medium text-gray-600">Total de Jogos</span>
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900">{stats.totalGames}</div>
+                        </div>
+
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <PieChart className="h-5 w-5 text-green-600" />
+                                <span className="text-sm font-medium text-gray-600">Números Pares</span>
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900">{evenPercentage}%</div>
+                            <div className="text-sm text-gray-500">{stats.evenCount} números</div>
+                        </div>
+
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <PieChart className="h-5 w-5 text-purple-600" />
+                                <span className="text-sm font-medium text-gray-600">Números Ímpares</span>
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900">{oddPercentage}%</div>
+                            <div className="text-sm text-gray-500">{stats.oddCount} números</div>
+                        </div>
+
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <TrendingDown className="h-5 w-5 text-orange-600" />
+                                <span className="text-sm font-medium text-gray-600">Nunca Jogados</span>
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900">{stats.neverDrawn.length}</div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <div className="flex items-center space-x-3 mb-4">
+                                <TrendingUp className="h-5 w-5 text-green-600" />
+                                <h3 className="text-lg font-semibold text-gray-900">Números Mais Frequentes</h3>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                {stats.favoriteNumbers.slice(0, 10).map((number, index) => (
+                                    <div key={number} className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                                                {number}
+                                            </div>
+                                            <span className="text-gray-700">Número {number}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {stats.frequency[number] || 0}x
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-white border border-gray-200 rounded-xl p-6">
+                            <div className="flex items-center space-x-3 mb-4">
+                                <TrendingDown className="h-5 w-5 text-orange-600" />
+                                <h3 className="text-lg font-semibold text-gray-900">Números Nunca Jogados</h3>
+                            </div>
+                            
+                            {stats.neverDrawn.length === 0 ? (
+                                <p className="text-gray-500">Você já jogou com todos os números!</p>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {stats.neverDrawn.slice(0, 20).map(number => (
+                                        <span
+                                            key={number}
+                                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                                        >
+                                            {number}
+                                        </span>
+                                    ))}
+                                    {stats.neverDrawn.length > 20 && (
+                                        <span className="px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-full">
+                                            +{stats.neverDrawn.length - 20} mais
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribuição Par/Ímpar</h3>
+                        <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                            <div className="flex h-full">
+                                <div 
+                                    className="bg-green-500 flex items-center justify-center text-white text-sm font-medium"
+                                    style={{ width: `${evenPercentage}%` }}
+                                >
+                                    {evenPercentage > 15 && `${evenPercentage}% Pares`}
+                                </div>
+                                <div 
+                                    className="bg-purple-500 flex items-center justify-center text-white text-sm font-medium"
+                                    style={{ width: `${oddPercentage}%` }}
+                                >
+                                    {oddPercentage > 15 && `${oddPercentage}% Ímpares`}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-between text-sm text-gray-600 mt-2">
+                            <span>Pares: {stats.evenCount}</span>
+                            <span>Ímpares: {stats.oddCount}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const GameManager = ({ lottery, onBack }) => {
+            const { user } = useAuth();
+            const [currentView, setCurrentView] = useState('list');
+            const [games, setGames] = useState([]);
+
+            const config = LOTTERY_CONFIGS[lottery];
+
+            const refreshGames = useMemo(() => {
+                if (user) {
+                    const userGames = gameService.getUserGames(user.id).filter(game => game.modalidade === lottery);
+                    setGames(userGames);
+                }
+            }, [user, lottery]);
+
+            useEffect(() => {
+                refreshGames;
+            }, [refreshGames]);
+
+            const handleGameCreated = (newGame) => {
+                setGames(prev => [newGame, ...prev]);
+                setCurrentView('list');
+            };
+
+            const handleGameUpdated = () => {
+                refreshGames;
+            };
+
+            const handleGameDeleted = (gameId) => {
+                setGames(prev => prev.filter(game => game.id !== gameId));
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={onBack}
+                                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                                <span>Voltar</span>
+                            </button>
+                            <div className="text-2xl">{config.icon}</div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{config.name}</h2>
+                                <p className="text-gray-600">{games.length} jogos salvos</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                            <button
+                                onClick={() => setCurrentView('statistics')}
+                                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                                    currentView === 'statistics'
+                                        ? 'bg-purple-100 text-purple-700'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                <BarChart3 className="h-4 w-4" />
+                                <span>Estatísticas</span>
+                            </button>
+                            
+                            <button
+                                onClick={() => setCurrentView('create')}
+                                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                                    currentView === 'create'
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                }`}
+                            >
+                                <Plus className="h-4 w-4" />
+                                <span>Novo Jogo</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {currentView === 'create' && (
+                        <GameCreator
+                            lottery={lottery}
+                            onGameCreated={handleGameCreated}
+                            onCancel={() => setCurrentView('list')}
+                        />
+                    )}
+
+                    {currentView === 'list' && (
+                        <GameList
+                            games={games}
+                            onGameUpdated={handleGameUpdated}
+                            onGameDeleted={handleGameDeleted}
+                        />
+                    )}
+
+                    {currentView === 'statistics' && user && (
+                        <GameStatistics
+                            lottery={lottery}
+                            userId={user.id}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        const WinningGames = () => {
+            const { user } = useAuth();
+            const [winningMatches, setWinningMatches] = useState([]);
+            const [stats, setStats] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [selectedLottery, setSelectedLottery] = useState('all');
+
+            useEffect(() => {
+                if (user) {
+                    checkWinningGames();
+                }
+            }, [user]);
+
+            const checkWinningGames = async () => {
+                if (!user) return;
+                
+                setLoading(true);
+                try {
+                    const games = gameService.getUserGames(user.id);
+                    const matches = await winningService.checkWinningGames(games);
+                    const gameStats = await winningService.getWinningStats(games);
+                    
+                    setWinningMatches(matches);
+                    setStats(gameStats);
+                } catch (error) {
+                    console.error('Erro ao verificar jogos vencedores:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const filteredMatches = selectedLottery === 'all' 
+                ? winningMatches 
+                : winningMatches.filter(match => match.game.modalidade === selectedLottery);
+
+            const winners = filteredMatches.filter(match => match.isWinner);
+            const lotteryTypes = [...new Set(winningMatches.map(match => match.game.modalidade))];
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                        <div className="text-center">
+                            <Trophy className="h-12 w-12 text-yellow-600 animate-spin mx-auto mb-4" />
+                            <p className="text-gray-600">Verificando seus jogos vencedores...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!stats || winningMatches.length === 0) {
+                return (
+                    <div className="min-h-screen bg-gray-50 p-4">
+                        <div className="max-w-4xl mx-auto">
+                            <div className="text-center py-12">
+                                <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Nenhum jogo para verificar</h2>
+                                <p className="text-gray-600 mb-6">Crie alguns jogos primeiro para verificar se você ganhou!</p>
+                                <button
+                                    onClick={() => window.history.back()}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Voltar ao Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-50 p-4">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="mb-6">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <Trophy className="h-8 w-8 text-yellow-600" />
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Jogos Vencedores</h1>
+                            </div>
+                            <p className="text-gray-600">Verifique se seus jogos foram premiados nos últimos sorteios</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <Target className="h-5 w-5 text-blue-600" />
+                                    <span className="text-sm font-medium text-gray-600">Total de Jogos</span>
+                                </div>
+                                <div className="text-2xl font-bold text-gray-900">{stats.totalGames}</div>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <Award className="h-5 w-5 text-green-600" />
+                                    <span className="text-sm font-medium text-gray-600">Vencedores</span>
+                                </div>
+                                <div className="text-2xl font-bold text-green-600">{stats.totalWinners}</div>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                                    <span className="text-sm font-medium text-gray-600">Taxa de Acerto</span>
+                                </div>
+                                <div className="text-2xl font-bold text-purple-600">{stats.winningPercentage.toFixed(1)}%</div>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <Star className="h-5 w-5 text-yellow-600" />
+                                    <span className="text-sm font-medium text-gray-600">Melhor Jogo</span>
+                                </div>
+                                <div className="text-lg font-bold text-yellow-600">
+                                    {stats.bestMatch ? `${stats.bestMatch.matchCount} acertos` : 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6">
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setSelectedLottery('all')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                        selectedLottery === 'all'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    Todas ({winningMatches.length})
+                                </button>
+                                {lotteryTypes.map(type => {
+                                    const count = winningMatches.filter(m => m.game.modalidade === type).length;
+                                    const config = LOTTERY_CONFIGS[type];
+                                    return (
+                                        <button
+                                            key={type}
+                                            onClick={() => setSelectedLottery(type)}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ${
+                                                selectedLottery === type
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            <span>{config.icon}</span>
+                                            <span>{config.name} ({count})</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {winners.length > 0 && (
+                            <div className="mb-6">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4 flex items-center space-x-2">
+                                    <Award className="h-6 w-6" />
+                                    <span>🎉 Parabéns! Você tem {winners.length} jogo(s) premiado(s)!</span>
+                                </h3>
+                                <div className="space-y-4">
+                                    {winners.map((match, index) => (
+                                        <WinningCard key={`winner-${index}`} match={match} isWinner={true} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                                Todos os Resultados ({filteredMatches.length})
+                            </h3>
+                            <div className="space-y-4">
+                                {filteredMatches.map((match, index) => (
+                                    <WinningCard key={`match-${index}`} match={match} isWinner={match.isWinner} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mt-8 text-center">
+                            <button
+                                onClick={checkWinningGames}
+                                disabled={loading}
+                                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Verificando...' : 'Verificar Novamente'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const WinningCard = ({ match, isWinner }) => {
+            const config = LOTTERY_CONFIGS[match.game.modalidade];
+            
+            return (
+                <div className={`bg-white rounded-xl p-4 md:p-6 shadow-sm border-2 transition-all ${
+                    isWinner 
+                        ? 'border-green-200 bg-green-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3 mb-2 md:mb-0">
+                            <span className="text-2xl">{config.icon}</span>
+                            <div>
+                                <h4 className="font-semibold text-gray-900">{config.name}</h4>
+                                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>{new Date(match.game.createdAt).toLocaleDateString('pt-BR')}</span>
+                                    <span>•</span>
+                                    <span>Concurso {match.result.concurso}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {isWinner && (
+                            <div className="flex items-center space-x-2 bg-green-100 px-3 py-1 rounded-full">
+                                <Trophy className="h-4 w-4 text-green-600" />
+                                <span className="text-sm font-medium text-green-700">PREMIADO!</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 className="text-sm font-medium text-gray-600 mb-2">Seus números:</h5>
+                            <div className="flex flex-wrap gap-1">
+                                {match.game.numbers.map(number => (
+                                    <span
+                                        key={number}
+                                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                            match.matchedNumbers.includes(number)
+                                                ? 'bg-green-100 text-green-800 ring-2 ring-green-300'
+                                                : 'bg-gray-100 text-gray-700'
+                                        }`}
+                                    >
+                                        {number}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h5 className="text-sm font-medium text-gray-600 mb-2">Números sorteados:</h5>
+                            <div className="flex flex-wrap gap-1">
+                                {match.result.numeros.slice(0, 10).map(number => (
+                                    <span
+                                        key={number}
+                                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                            match.matchedNumbers.includes(number)
+                                                ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-300'
+                                                : 'bg-gray-100 text-gray-700'
+                                        }`}
+                                    >
+                                        {number}
+                                    </span>
+                                ))}
+                                {match.result.numeros.length > 10 && (
+                                    <span className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                                        +{match.result.numeros.length - 10}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between">
+                            <div className="mb-2 md:mb-0">
+                                <span className="text-lg font-bold text-gray-900">
+                                    {match.matchCount} acerto{match.matchCount !== 1 ? 's' : ''}
+                                </span>
+                                <span className="text-sm text-gray-500 ml-2">({match.prizeCategory})</span>
+                            </div>
+                            
+                            <div className="text-right">
+                                <div className={`text-sm font-medium ${
+                                    isWinner ? 'text-green-600' : 'text-gray-500'
+                                }`}>
+                                    {match.estimatedPrize}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Dashboard = () => {
+            const { user } = useAuth();
+            const [selectedLottery, setSelectedLottery] = useState(null);
+
+            const gameCounts = useMemo(() => {
+                if (!user) return {};
+                
+                const games = gameService.getUserGames(user.id);
+                const counts = {};
+                
+                Object.keys(LOTTERY_CONFIGS).forEach(type => {
+                    counts[type] = games.filter(game => game.modalidade === type).length;
+                });
+                
+                return counts;
+            }, [user]);
+
+            if (selectedLottery) {
+                return (
+                    <GameManager
+                        lottery={selectedLottery}
+                        onBack={() => setSelectedLottery(null)}
+                    />
+                );
+            }
+
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="mb-8">
+                        <LotteryResults />
+                    </div>
+
+                    <div className="mb-8">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Suas Loterias</h2>
+                        <p className="text-gray-600">Selecione uma modalidade para gerenciar seus jogos</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {Object.keys(LOTTERY_CONFIGS).map(type => (
+                            <LotteryCard
+                                key={type}
+                                type={type}
+                                gameCount={gameCounts[type] || 0}
+                                onClick={() => setSelectedLottery(type)}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Bem-vindo ao Lotemax!</h3>
+                        <div className="grid md:grid-cols-2 gap-6 text-gray-700">
+                            <div>
+                                <h4 className="font-medium mb-2">✨ Recursos Principais</h4>
+                                <ul className="space-y-1 text-sm">
+                                    <li>• Jogos ilimitados para todas as modalidades</li>
+                                    <li>• Geração automática e manual de números</li>
+                                    <li>• Estatísticas detalhadas dos seus jogos</li>
+                                    <li>• Verificação de jogos vencedores</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-medium mb-2">🎯 Como usar</h4>
+                                <ul className="space-y-1 text-sm">
+                                    <li>• Clique em uma modalidade para começar</li>
+                                    <li>• Crie jogos manualmente ou use o gerador</li>
+                                    <li>• Favorite seus jogos preferidos</li>
+                                    <li>• Acompanhe suas estatísticas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const AppContent = () => {
+            const { user, isLoading } = useAuth();
+            const [showAuth, setShowAuth] = useState(false);
+            const [currentView, setCurrentView] = useState('dashboard');
+
+            useEffect(() => {
+                if (!isLoading && !user) {
+                    setShowAuth(true);
+                } else if (user) {
+                    setShowAuth(false);
+                }
+            }, [user, isLoading]);
+
+            useEffect(() => {
+                const handleNavigation = () => {
+                    const hash = window.location.hash;
+                    if (hash.includes('winning-games')) {
+                        setCurrentView('winning-games');
+                    } else {
+                        setCurrentView('dashboard');
+                    }
+                };
+
+                handleNavigation();
+                window.addEventListener('hashchange', handleNavigation);
+                
+                const handleLinkClick = (e) => {
+                    const target = e.target.closest('a');
+                    if (target && target.href && target.href.includes('winning-games')) {
+                        e.preventDefault();
+                        window.location.hash = 'winning-games';
+                        setCurrentView('winning-games');
+                    }
+                };
+
+                document.addEventListener('click', handleLinkClick);
+
+                return () => {
+                    window.removeEventListener('hashchange', handleNavigation);
+                    document.removeEventListener('click', handleLinkClick);
+                };
+            }, []);
+
+            if (isLoading) {
+                return (
+                    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="text-4xl mb-4">🎲</div>
+                            <div className="text-lg text-gray-600">Carregando...</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (showAuth) {
+                return <AuthForm onSuccess={() => setShowAuth(false)} />;
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <Header />
+                    <main>
+                        {currentView === 'dashboard' ? <Dashboard /> : <WinningGames />}
+                    </main>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <AuthProvider>
+                    <AppContent />
+                </AuthProvider>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
