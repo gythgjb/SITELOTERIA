@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, FileSpreadsheet, Package, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const Header: React.FC = () => {
@@ -13,6 +13,21 @@ export const Header: React.FC = () => {
             <div className="text-2xl">🎲</div>
             <h1 className="text-xl font-bold text-gray-900">Lotemax</h1>
           </div>
+          
+          <nav className="hidden md:flex items-center space-x-6">
+            <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>Planilhas</span>
+            </button>
+            <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+              <Package className="h-4 w-4" />
+              <span>Mais Produtos</span>
+            </button>
+            <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+              <Users className="h-4 w-4" />
+              <span>Comunidade</span>
+            </button>
+          </nav>
           
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-gray-700">

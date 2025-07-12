@@ -44,12 +44,10 @@ export const LOTTERY_CONFIGS: Record<LotteryType, LotteryConfig> = {
     icon: '🎲'
   },
   milionaria: {
-  name: '+Milionária',
-  range: 50, // ou o valor correto da faixa de números
-  minNumbers: 6, // valor correto para +Milionária
-  maxNumbers: 6,
-  icon: '💰'
-}
-
-
+    name: '+Milionária',
+    minNumbers: 6,
+    maxNumbers: 12,
+    range: 50,
+    icon: '💎'
+  }
 };

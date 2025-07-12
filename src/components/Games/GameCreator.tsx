@@ -84,20 +84,6 @@ export const GameCreator: React.FC<GameCreatorProps> = ({ lottery, onGameCreated
         </div>
 
         {lottery === 'federal' ? (
-          <div className="space-y-4">
-            <input
-              type="number"
-              placeholder="Digite o número (0-99999)"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value >= 0 && value <= 99999) {
-                  setSelectedNumbers([value]);
-                }
-              }}
-            />
-          </div>
-        ) : (
           <div className="grid grid-cols-8 sm:grid-cols-10 gap-2">
             {Array.from({ length: config.range }, (_, i) => i + 1).map(number => (
               <button
@@ -120,7 +106,6 @@ export const GameCreator: React.FC<GameCreatorProps> = ({ lottery, onGameCreated
               </button>
             ))}
           </div>
-        )}
       </div>
 
       {selectedNumbers.length > 0 && (

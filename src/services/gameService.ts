@@ -43,11 +43,6 @@ export const gameService = {
     const config = LOTTERY_CONFIGS[modalidade];
     const numbers: number[] = [];
     
-    if (modalidade === 'federal') {
-      // Federal lottery uses different logic
-      return [Math.floor(Math.random() * config.range)];
-    }
-    
     while (numbers.length < count) {
       const num = Math.floor(Math.random() * config.range) + 1;
       if (!numbers.includes(num)) {
